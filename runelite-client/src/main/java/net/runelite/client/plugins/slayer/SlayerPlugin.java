@@ -80,6 +80,10 @@ import net.runelite.client.ui.overlay.infobox.InfoBoxManager;
 import net.runelite.client.util.ColorUtil;
 import net.runelite.client.util.Text;
 import net.runelite.http.api.chat.ChatClient;
+import net.runelite.api.InventoryID;
+import net.runelite.api.Item;
+import net.runelite.api.ItemComposition;
+import net.runelite.api.events.ItemContainerChanged;
 
 @PluginDescriptor(
 	name = "Slayer",
@@ -205,6 +209,7 @@ public class SlayerPlugin extends Plugin
 	private int points;
 
 	private TaskCounter counter;
+	private TargetWeaknessItemOverlay targetWeaknessItemOverlay;
 	private int cachedXp = -1;
 	private Instant infoTimer;
 	private boolean loginFlag;
@@ -244,6 +249,7 @@ public class SlayerPlugin extends Plugin
 		overlayManager.remove(targetWeaknessOverlay);
 		overlayManager.remove(targetMinimapOverlay);
 		removeCounter();
+		removeWeaknessItemOverlay();
 		highlightedTargets.clear();
 		cachedXp = -1;
 
@@ -399,6 +405,7 @@ public class SlayerPlugin extends Plugin
 			if (timeSinceInfobox.compareTo(statTimeout) >= 0)
 			{
 				removeCounter();
+				removeWeaknessItemOverlay();
 			}
 		}
 	}
@@ -560,18 +567,32 @@ public class SlayerPlugin extends Plugin
 	@Subscribe
 	private void onConfigChanged(ConfigChanged event)
 	{
-		if (!event.getGroup().equals("slayer") || !event.getKey().equals("infobox"))
+		if (!event.getGroup().equals("slayer"))
 		{
 			return;
 		}
 
-		if (config.showInfobox())
+		if (event.getKey().equals("infobox"))
 		{
-			clientThread.invoke(this::addCounter);
+			if (config.showInfobox())
+			{
+				clientThread.invoke(this::addCounter);
+			}
+			else
+			{
+				removeCounter();
+			}
 		}
-		else
+		else if (event.getKey().equals("weaknessReminder"))
 		{
-			removeCounter();
+			if (config.weaknessReminder())
+			{
+				clientThread.invoke(this::addWeaknessItemOverlay);
+			}
+			else
+			{
+				removeWeaknessItemOverlay();
+			}
 		}
 	}
 
@@ -687,16 +708,81 @@ public class SlayerPlugin extends Plugin
 		taskLocation = location;
 		save();
 		removeCounter();
+		removeWeaknessItemOverlay();
 
 		if (addCounter)
 		{
 			infoTimer = Instant.now();
 			addCounter();
+			addWeaknessItemOverlay();
 		}
 
 		Task task = Task.getTask(name);
 		rebuildTargetNames(task);
 		rebuildTargetList();
+	}
+
+	private boolean clientContainerHasAtLeastOne(int[] requiredItemIDs)
+	{
+		Item[] equipmentItems = client.getItemContainer(InventoryID.EQUIPMENT).getItems();
+		Item[] inventoryItems = client.getItemContainer(InventoryID.INVENTORY).getItems();
+
+		for (int requiredItemID : requiredItemIDs)
+		{
+			for (Item item : equipmentItems)
+			{
+				if (item.getId() == requiredItemID)
+					return true;
+			}
+			for (Item item : inventoryItems)
+			{
+				if (item.getId() == requiredItemID)
+					return true;
+			}
+		}
+
+		return false;
+	}
+
+	private void addWeaknessItemOverlay()
+	{
+		if (Strings.isNullOrEmpty(taskName) || !config.weaknessReminder())
+		{
+			return;
+		}
+
+		Task task = Task.getTask(taskName);
+
+		if (task == null || task.getWeaknessDisplayItem() == -1 || task.getWeaknessItems() == null)
+		{
+			return;
+		}
+
+		//Check to see if player has one of the items needed for the task
+		if (clientContainerHasAtLeastOne(task.getWeaknessItems()))
+		{
+			return;
+		}
+
+		ItemComposition weaknessDisplayItemComposition = itemManager.getItemComposition(task.getWeaknessDisplayItem());
+		String weaknessDisplayItemName = weaknessDisplayItemComposition.getName();
+
+		BufferedImage taskImg = itemManager.getImage(weaknessDisplayItemComposition.getId());
+		String taskTooltip = ColorUtil.wrapWithColorTag("Missing %s", Color.RED);
+
+		targetWeaknessItemOverlay = new TargetWeaknessItemOverlay(taskImg, this);
+		targetWeaknessItemOverlay.setTooltip(String.format(taskTooltip, weaknessDisplayItemName));
+
+		infoBoxManager.addInfoBox(targetWeaknessItemOverlay);
+	}
+
+	private void removeWeaknessItemOverlay()
+	{
+		if (targetWeaknessItemOverlay != null)
+		{
+			infoBoxManager.removeInfoBox(targetWeaknessItemOverlay);
+			targetWeaknessItemOverlay = null;
+		}
 	}
 
 	private void addCounter()
@@ -748,6 +834,28 @@ public class SlayerPlugin extends Plugin
 
 		infoBoxManager.removeInfoBox(counter);
 		counter = null;
+	}
+
+	@Subscribe
+	public void onItemContainerChanged(ItemContainerChanged event)
+	{
+		if (!config.weaknessReminder() || event.getItemContainer() != client.getItemContainer(InventoryID.EQUIPMENT) && event.getItemContainer() != client.getItemContainer(InventoryID.INVENTORY))
+		{
+			return;
+		}
+
+		if (infoTimer != null && config.statTimeout() != 0)
+		{
+			Duration timeSinceInfobox = Duration.between(infoTimer, Instant.now());
+			Duration statTimeout = Duration.ofMinutes(config.statTimeout());
+
+			if (timeSinceInfobox.compareTo(statTimeout) < 0)
+			{
+				removeWeaknessItemOverlay();
+				addWeaknessItemOverlay();
+			}
+		}
+
 	}
 
 	void taskLookup(ChatMessage chatMessage, String message)

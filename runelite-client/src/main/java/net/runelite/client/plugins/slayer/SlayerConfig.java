@@ -114,6 +114,17 @@ public interface SlayerConfig extends Config
 
 	@ConfigItem(
 		position = 8,
+		keyName = "weaknessReminder",
+		name = "Weakness Item Reminder",
+		description = "Show a reminder overlay if you aren't carrying an item capable of finishing off your slayer task monsters (Only Lizards, Gargoyles & Rockslugs)"
+	)
+	default boolean weaknessReminder()
+	{
+		return true;
+	}
+
+	@ConfigItem(
+		position = 9,
 		keyName = "taskCommand",
 		name = "Task Command",
 		description = "Configures whether the slayer task command is enabled<br> !task"

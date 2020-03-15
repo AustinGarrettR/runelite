@@ -90,7 +90,12 @@ enum Task
 	REVENANTS("Revenants", ItemID.BRACELET_OF_ETHEREUM, "Revenant imp", "Revenant goblin", "Revenant pyrefiend", "Revenant hobgoblin", "Revenant cyclops", "Revenant hellhound", "Revenant demon", "Revenant ork", "Revenant dark beast", "Revenant knight", "Revenant dragon"),
 	FLESH_CRAWLERS("Fleshcrawlers", ItemID.ENSOULED_SCORPION_HEAD, "Flesh crawler"),
 	FOSSIL_ISLAND_WYVERNS("Fossil island wyverns", ItemID.FOSSIL_ISLAND_WYVERN, "Ancient wyvern", "Long-tailed wyvern", "Spitting wyvern", "Taloned wyvern"),
-	GARGOYLES("Gargoyles", ItemID.GARGOYLE, 9, ItemID.ROCK_HAMMER),
+	GARGOYLES("Gargoyles", ItemID.GARGOYLE, 9, ItemID.ROCK_HAMMER,
+		new int[] {
+			ItemID.ROCK_HAMMER,
+			ItemID.ROCK_THROWNHAMMER,
+			ItemID.GRANITE_HAMMER
+		}),
 	GENERAL_GRAARDOR("General Graardor", ItemID.PET_GENERAL_GRAARDOR),
 	GHOSTS("Ghosts", ItemID.GHOSTSPEAK_AMULET, "Tortured soul"),
 	GIANT_MOLE("Giant Mole", ItemID.BABY_MOLE),
@@ -98,7 +103,12 @@ enum Task
 	GOBLINS("Goblins", ItemID.ENSOULED_GOBLIN_HEAD),
 	GREATER_DEMONS("Greater demons", ItemID.GREATER_DEMON_MASK),
 	GREEN_DRAGONS("Green dragons", ItemID.GREEN_DRAGON_MASK),
-	GROTESQUE_GUARDIANS("Grotesque Guardians", ItemID.MIDNIGHT, 0, ItemID.ROCK_HAMMER, "Dusk", "Dawn"),
+	GROTESQUE_GUARDIANS("Grotesque Guardians", ItemID.MIDNIGHT, 0, ItemID.ROCK_HAMMER,
+		new int[] {
+			ItemID.ROCK_HAMMER,
+			ItemID.ROCK_THROWNHAMMER,
+			ItemID.GRANITE_HAMMER
+		}, "Dusk", "Dawn"),
 	HARPIE_BUG_SWARMS("Harpie bug swarms", ItemID.SWARM),
 	HELLHOUNDS("Hellhounds", ItemID.HELLHOUND),
 	HILL_GIANTS("Hill giants", ItemID.ENSOULED_GIANT_HEAD),
@@ -132,14 +142,30 @@ enum Task
 	MOLANISKS("Molanisks", ItemID.MOLANISK),
 	MONKEYS("Monkeys", ItemID.ENSOULED_MONKEY_HEAD),
 	MOSS_GIANTS("Moss giants", ItemID.HILL_GIANT_CLUB),
-	MUTATED_ZYGOMITES("Mutated zygomites", ItemID.MUTATED_ZYGOMITE, 7, ItemID.FUNGICIDE_SPRAY_0, "Zygomite", "Fungi"),
+	MUTATED_ZYGOMITES("Mutated zygomites", ItemID.MUTATED_ZYGOMITE, 7, ItemID.FUNGICIDE_SPRAY_0,
+		new int[] {
+			ItemID.FUNGICIDE_SPRAY_0,
+			ItemID.FUNGICIDE_SPRAY_1,
+			ItemID.FUNGICIDE_SPRAY_2,
+			ItemID.FUNGICIDE_SPRAY_3,
+			ItemID.FUNGICIDE_SPRAY_4,
+			ItemID.FUNGICIDE_SPRAY_5,
+			ItemID.FUNGICIDE_SPRAY_6,
+			ItemID.FUNGICIDE_SPRAY_7,
+			ItemID.FUNGICIDE_SPRAY_8,
+			ItemID.FUNGICIDE_SPRAY_9,
+			ItemID.FUNGICIDE_SPRAY_10
+		}, "Zygomite", "Fungi"),
 	NECHRYAEL("Nechryael", ItemID.NECHRYAEL, "Nechryarch"),
 	OGRES("Ogres", ItemID.ENSOULED_OGRE_HEAD),
 	OTHERWORLDLY_BEING("Otherworldly beings", ItemID.GHOSTLY_HOOD),
 	PYREFIENDS("Pyrefiends", ItemID.PYREFIEND, "Flaming pyrelord"),
 	RATS("Rats", ItemID.RATS_TAIL),
 	RED_DRAGONS("Red dragons", ItemID.BABY_RED_DRAGON),
-	ROCKSLUGS("Rockslugs", ItemID.ROCKSLUG, 4, ItemID.BAG_OF_SALT),
+	ROCKSLUGS("Rockslugs", ItemID.ROCKSLUG, 4, ItemID.BAG_OF_SALT,
+		new int[] {
+			ItemID.BAG_OF_SALT
+		}),
 	RUNE_DRAGONS("Rune dragons", ItemID.RUNE_DRAGON_MASK),
 	SCORPIA("Scorpia", ItemID.SCORPIAS_OFFSPRING),
 	CHAOS_DRUIDS("Chaos druids", ItemID.ELDER_CHAOS_HOOD, "Elder Chaos druid", "Chaos druid"),
@@ -229,7 +255,8 @@ enum Task
 	private final int itemSpriteId;
 	private final String[] targetNames;
 	private final int weaknessThreshold;
-	private final int weaknessItem;
+	private final int weaknessDisplayItem;
+	private final int[] weaknessItems;
 	private final int expectedKillExp;
 
 	static
@@ -250,18 +277,32 @@ enum Task
 		this.name = name;
 		this.itemSpriteId = itemSpriteId;
 		this.weaknessThreshold = -1;
-		this.weaknessItem = -1;
+		this.weaknessDisplayItem = -1;
+		this.weaknessItems = null;
 		this.targetNames = targetNames;
 		this.expectedKillExp = 0;
 	}
 
-	Task(String name, int itemSpriteId, int weaknessThreshold, int weaknessItem, String... targetNames)
+	Task(String name, int itemSpriteId, int weaknessThreshold, int weaknessDisplayItem, String... targetNames)
 	{
 		Preconditions.checkArgument(itemSpriteId >= 0);
 		this.name = name;
 		this.itemSpriteId = itemSpriteId;
 		this.weaknessThreshold = weaknessThreshold;
-		this.weaknessItem = weaknessItem;
+		this.weaknessDisplayItem = weaknessDisplayItem;
+		this.weaknessItems = null;
+		this.targetNames = targetNames;
+		this.expectedKillExp = 0;
+	}
+
+	Task(String name, int itemSpriteId, int weaknessThreshold, int weaknessDisplayItem, int[] weaknessItems, String... targetNames)
+	{
+		Preconditions.checkArgument(itemSpriteId >= 0);
+		this.name = name;
+		this.itemSpriteId = itemSpriteId;
+		this.weaknessThreshold = weaknessThreshold;
+		this.weaknessDisplayItem = weaknessDisplayItem;
+		this.weaknessItems = weaknessItems;
 		this.targetNames = targetNames;
 		this.expectedKillExp = 0;
 	}
@@ -272,7 +313,8 @@ enum Task
 		this.name = name;
 		this.itemSpriteId = itemSpriteId;
 		this.weaknessThreshold = -1;
-		this.weaknessItem = -1;
+		this.weaknessDisplayItem = -1;
+		this.weaknessItems = null;
 		this.targetNames = new String[0];
 		this.expectedKillExp = expectedKillExp;
 	}

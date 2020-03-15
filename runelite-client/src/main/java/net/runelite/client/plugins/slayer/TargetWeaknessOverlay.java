@@ -72,13 +72,13 @@ class TargetWeaknessOverlay extends Overlay
 		}
 
 		final Task curTask = Task.getTask(plugin.getTaskName());
-		if (curTask == null || curTask.getWeaknessThreshold() < 0 || curTask.getWeaknessItem() < 0)
+		if (curTask == null || curTask.getWeaknessThreshold() < 0 || curTask.getWeaknessDisplayItem() < 0)
 		{
 			return null;
 		}
 
 		final int threshold = curTask.getWeaknessThreshold();
-		final BufferedImage image = itemManager.getImage(curTask.getWeaknessItem());
+		final BufferedImage image = itemManager.getImage(curTask.getWeaknessDisplayItem());
 
 		if (image == null)
 		{
