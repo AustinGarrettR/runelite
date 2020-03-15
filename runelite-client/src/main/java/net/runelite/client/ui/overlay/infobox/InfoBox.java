@@ -30,6 +30,7 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 import net.runelite.client.plugins.Plugin;
+import net.runelite.client.ui.overlay.components.ComponentConstants;
 
 public abstract class InfoBox
 {
@@ -51,6 +52,10 @@ public abstract class InfoBox
 	@Getter
 	@Setter
 	private String tooltip;
+
+	@Getter
+	@Setter
+	private Color panelBackgroundColor = ComponentConstants.STANDARD_BACKGROUND_COLOR;
 
 	public InfoBox(BufferedImage image, Plugin plugin)
 	{

@@ -107,6 +107,7 @@ public class InfoBoxOverlay extends Overlay
 			}
 			infoBoxComponent.setImage(box.getScaledImage());
 			infoBoxComponent.setTooltip(box.getTooltip());
+			infoBoxComponent.setBackgroundColor(box.getPanelBackgroundColor());
 			panelComponent.getChildren().add(infoBoxComponent);
 		}
 
